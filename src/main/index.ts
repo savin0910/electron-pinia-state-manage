@@ -1,13 +1,23 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 
+import log from 'electron-log';
 import squirrelStartup from 'electron-squirrel-startup';
+
+import { createStore } from './store';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // eslint-disable-next-line global-require, import/no-unresolved
 if (squirrelStartup) {
   app.quit();
 }
+
+// Quit the app if another instance is already running
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+}
+
+const { transfer } = createStore();
 
 const createWindow = () => {
   // Create the browser window.
@@ -18,6 +28,10 @@ const createWindow = () => {
       preload: path.join(__dirname, 'index.preload.js'),
     },
   });
+
+  // Hide the menu bar
+  mainWindow.setMenu(null);
+  mainWindow.menuBarVisible = false;
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -56,3 +70,22 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+let beforeQuit = false;
+
+app.on('will-quit', async (event) => {
+  if (beforeQuit) {
+    return;
+  }
+
+  event.preventDefault();
+
+  log.scope('app').info('Saving state before quitting...');
+
+  // Flush the state to disk before quitting
+  await transfer.flush();
+
+  log.scope('app').info('State saved, quitting...');
+
+  beforeQuit = true;
+  app.quit();
+});

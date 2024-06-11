@@ -22,6 +22,6 @@
     "target": "ESNext",
     "useDefineForClassFields": true
   },
-  "include": ["env.d.ts", "src/**/*.ts", "src/**/*.vue"],
+  "include": ["@types", "src/**/*.ts", "src/**/*.vue"],
   "exclude": ["scripts", "node_modules"]
 }

@@ -1,3 +1,4 @@
+import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
 
 import { pluginExposeRenderer } from './vite.base.config.mjs';
@@ -17,7 +18,10 @@ export default defineConfig((env) => {
     build: {
       outDir: `.vite/renderer/${name}`,
     },
-    plugins: [pluginExposeRenderer(name)],
+    plugins: [
+      vue(),
+      pluginExposeRenderer(name),
+    ],
     resolve: {
       preserveSymlinks: true,
     },

@@ -33,10 +33,3 @@ declare module 'vite' {
     forgeConfigSelf: VitePluginConfig[K][number];
   }
 }
-
-declare interface Window {
-  pinia: {
-    on(callback: (data: any) => void): void;
-    send(data: any): void;
-  };
-}

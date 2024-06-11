@@ -1,10 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-contextBridge.exposeInMainWorld('pinia', {
-  on(callback: (data: any) => void) {
-    ipcRenderer.on('pinia:main', (_, data) => callback(data));
+contextBridge.exposeInMainWorld('electron', {
+  on(event: string, callback: (...data: any[]) => void) {
+    ipcRenderer.on(event, (_, ...data) => callback(...data));
   },
-  send(data: any) {
-    ipcRenderer.send('pinia:renderers', data);
+  send(event: string, ...data: any[]) {
+    ipcRenderer.send(event, ...data);
+  },
+  invoke(event: string, ...data: any[]) {
+    return ipcRenderer.invoke(event, ...data);
   },
 });
