@@ -1,7 +1,7 @@
 import type { MaybePromise } from '../types';
 import type { PiniaPluginContext, StateTree } from 'pinia';
 
-export type SyncPluginTransfer = {
+export type PiniaTransfer = {
   read: (id: string) => MaybePromise<StateTree>;
   write: (id: string, state: StateTree) => MaybePromise<void>;
 
@@ -10,7 +10,7 @@ export type SyncPluginTransfer = {
   getState?: (id: string) => MaybePromise<StateTree | undefined>;
 };
 
-export function createSyncPlugin(transfer: SyncPluginTransfer) {
+export function createSyncPlugin(transfer: PiniaTransfer) {
   return async function syncPlugin({ store, options }: PiniaPluginContext) {
     const syncFlag = Symbol('sync-flag');
     const omitExcluded = (state: StateTree) => {

@@ -1,7 +1,7 @@
-import type { SyncPluginTransfer } from '@/shared/plugins';
+import type { PiniaTransfer } from '@/shared/plugins';
 import type { StateTree } from 'pinia';
 
-export const transfer: SyncPluginTransfer = {
+export const transfer: PiniaTransfer = {
   read: async (id?: string) => {
     // Get state from main process
     const state = await window.electron.invoke('pinia:read', id) as StateTree | undefined;

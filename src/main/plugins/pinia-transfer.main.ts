@@ -6,7 +6,7 @@ import log from 'electron-log';
 
 import { exists } from '../utils';
 
-import type { SyncPluginTransfer } from '@/shared/plugins';
+import type { PiniaTransfer } from '@/shared/plugins';
 import type { WebContents } from 'electron';
 import type { StateTree } from 'pinia';
 
@@ -14,7 +14,7 @@ export type PiniaTransferMainOptions = {
   saveInterval?: number;
 };
 
-export type PiniaTransferMain = SyncPluginTransfer & {
+export type PiniaTransferMain = PiniaTransfer & {
   flush: () => Promise<void>;
 };
 
