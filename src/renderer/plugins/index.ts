@@ -1,1 +1,1 @@
-export * from './pinia-transfer-renderer.plugin';
+export * from './pinia-transfer.renderer';
