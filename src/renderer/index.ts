@@ -15,8 +15,3 @@ store.use(syncPlugin);
 
 app.use(store);
 app.mount('#app');
-
-// Handle updates from the main process
-window.electron.on('pinia:update', ({ id, state }) => {
-  transfer.onUpdate?.(id, state);
-});

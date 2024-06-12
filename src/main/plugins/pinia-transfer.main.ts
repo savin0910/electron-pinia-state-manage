@@ -1,4 +1,4 @@
-import { app, webContents } from 'electron';
+import { app, ipcMain, webContents } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -10,12 +10,10 @@ import type { PiniaTransfer } from '@/shared/plugins';
 import type { WebContents } from 'electron';
 import type { StateTree } from 'pinia';
 
-export type PiniaTransferMainOptions = {
-  saveInterval?: number;
-};
-
 export type PiniaTransferMain = PiniaTransfer & {
   flush: () => Promise<void>;
+  start: (interval?: number) => void;
+  stop: () => void;
 };
 
 const localFile = path.join(app.getPath('userData'), 'pinia-state.json');
@@ -37,75 +35,86 @@ const readLocalFile = async () => {
   }
 };
 
-export function createPiniaTransferMain(options?: PiniaTransferMainOptions): PiniaTransferMain {
+let timer: NodeJS.Timeout;
+
+const dirtyStores = new Set<string>();
+export const transfer: PiniaTransferMain = {
+  // Read the state from transfer
+  read: async (id: string) => {
+    const data = await readLocalFile();
+
+    return data?.[id];
+  },
+  // Write updated state to transfer
+  write: (id: string, state?: StateTree) => {
+    // Record the store which has been updated
+    dirtyStores.add(id);
+
+    webContents.getAllWebContents().forEach((contents: WebContents) => {
+      if (!contents.isDestroyed()) {
+        // Send the state to the renderer process
+        contents.send('pinia:update', { id, state });
+      }
+    });
+  },
+  // Flush the state to disk, it can be called by other logic when needed
+  flush: async () => {
+    if (dirtyStores.size === 0) {
+      // Skip if nothing has changed
+      return;
+    }
+
+    const data = (await readLocalFile()) || {};
+
+    // Overwrite local state with the latest state from the stores
+    for await (const id of dirtyStores) {
+      data[id] = {
+        ...data[id],
+        ...(await transfer.getState?.(id)),
+      };
+    }
+
+    // Write fully updated state to disk
+    try {
+      await fs.writeFile(localFile, JSON.stringify(data), 'utf-8');
+
+      // Clear cached store ids
+      dirtyStores.clear();
+    } catch (error) {
+      log.scope('pinia-transfer-main').error('Failed to write state:', error);
+    }
+  },
   // Save the state every minute by default
-  const interval = options?.saveInterval ?? 60 * 1000;
+  start: (interval = 60 * 1000) => {
+    clearInterval(timer);
 
-  const dirtyStores = new Set<string>();
-  const transfer: PiniaTransferMain = {
-    // Read the state from transfer
-    read: async (id: string) => {
-      const data = await readLocalFile();
+    timer = setInterval(transfer.flush, interval);
+  },
+  stop: () => {
+    clearInterval(timer);
+  },
+};
 
-      return data?.[id];
-    },
-    // Write updated state to transfer
-    write: (id: string, state?: StateTree) => {
-      webContents.getAllWebContents().forEach((contents: WebContents) => {
-        if (!contents.isDestroyed()) {
-          // Send the state to the renderer process
-          contents.send('pinia:update', { id, state });
-        }
-      });
-    },
-    // Flush the state to disk, it can be called by other logic when needed
-    flush: async () => {
-      if (dirtyStores.size === 0) {
-        // Skip if nothing has changed
-        return;
-      }
+// Clear timer before quit
+app.on('will-quit', () => clearInterval(timer));
 
-      const data = (await readLocalFile()) || {};
+// Handle updates from the renderer process
+ipcMain.on('pinia:update', ({ sender }, { id, state }: {
+  id: string;
+  state: any;
+}) => {
+  // Record the store which has been updated
+  dirtyStores.add(id);
 
-      // Overwrite local state with the latest state from the stores
-      for await (const id of dirtyStores) {
-        data[id] = {
-          ...data[id],
-          ...(await transfer.getState?.(id)),
-        };
-      }
+  transfer.onUpdate?.(id, state);
 
-      // Write fully updated state to disk
-      try {
-        await fs.writeFile(localFile, JSON.stringify(data), 'utf-8');
-
-        // Clear cached store ids
-        dirtyStores.clear();
-      } catch (error) {
-        log.scope('pinia-transfer-main').error('Failed to write state:', error);
-      }
-    },
-  };
-  const proxy = new Proxy(transfer, {
-    get(target, prop, receiver) {
-      const origin = Reflect.get(target, prop, receiver);
-
-      if (prop === 'wirte' || prop === 'getState') {
-        return function method(id: string, ...args: any[]) {
-          // Record the store which has been updated
-          dirtyStores.add(id);
-
-          return origin?.call(target, id, ...args);
-        };
-      }
-
-      return origin;
-    },
+  // Broadcast the update to all other renderer processes
+  webContents.getAllWebContents().forEach((contents) => {
+    if (contents !== sender && !contents.isDestroyed()) {
+      // Send the state to the renderer process
+      contents.send('pinia:update', { id, state });
+    }
   });
-  const timer = setInterval(transfer.flush, interval);
+});
 
-  // Clear timer before quit
-  app.on('will-quit', () => clearInterval(timer));
-
-  return proxy;
-}
+ipcMain.handle('pinia:read', async (_, id: string) => transfer.getState?.(id));

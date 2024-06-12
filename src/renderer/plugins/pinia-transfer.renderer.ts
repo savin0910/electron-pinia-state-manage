@@ -13,3 +13,8 @@ export const transfer: PiniaTransfer = {
     window.electron.send('pinia:update', { id, state });
   },
 };
+
+// Handle updates from the main process
+window.electron.on('pinia:update', ({ id, state }) => {
+  transfer.onUpdate?.(id, state);
+});
