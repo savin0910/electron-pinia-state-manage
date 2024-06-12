@@ -1,6 +1,7 @@
 import { defineConfig, mergeConfig } from 'vite';
 
 import {
+  alias,
   getBuildConfig,
   external,
   pluginHotRestart,
@@ -13,6 +14,9 @@ export default defineConfig((env) => {
   const { forgeConfigSelf } = forgeEnv;
   /** @type {import('vite').UserConfig} */
   const config = {
+    resolve: {
+      alias,
+    },
     build: {
       rollupOptions: {
         external,

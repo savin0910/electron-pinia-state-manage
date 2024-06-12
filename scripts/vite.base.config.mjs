@@ -1,4 +1,5 @@
 import { builtinModules } from 'node:module';
+import path from 'node:path';
 
 import pkg from '../package.json';
 
@@ -8,6 +9,10 @@ export const builtins = [
 ];
 
 export const external = [...builtins, ...Object.keys(pkg.dependencies || {})];
+
+export const alias = {
+  '@': path.join(__dirname, '../src'),
+};
 
 /** @type {(env: import('vite').ConfigEnv<'build'>) => import('vite').UserConfig} */
 export const getBuildConfig = (env) => {

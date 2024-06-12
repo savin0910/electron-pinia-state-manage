@@ -1,6 +1,7 @@
 import { defineConfig, mergeConfig } from 'vite';
 
 import {
+  alias,
   getBuildConfig,
   getBuildDefine,
   external,
@@ -27,6 +28,7 @@ export default defineConfig((env) => {
     plugins: [pluginHotRestart('restart')],
     define,
     resolve: {
+      alias,
       // Load the Node.js entry.
       mainFields: ['module', 'jsnext:main', 'jsnext'],
     },

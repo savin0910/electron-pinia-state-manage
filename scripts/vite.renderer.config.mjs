@@ -1,7 +1,7 @@
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
 
-import { pluginExposeRenderer } from './vite.base.config.mjs';
+import { alias, pluginExposeRenderer } from './vite.base.config.mjs';
 
 // https://vitejs.dev/config
 export default defineConfig((env) => {
@@ -23,6 +23,7 @@ export default defineConfig((env) => {
       pluginExposeRenderer(name),
     ],
     resolve: {
+      alias,
       preserveSymlinks: true,
     },
     clearScreen: false,
