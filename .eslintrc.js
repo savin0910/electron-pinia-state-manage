@@ -1,6 +1,8 @@
 /* eslint-disable vue/max-len */
 require('@rushstack/eslint-patch/modern-module-resolution');
 
+const path = require('node:path');
+
 module.exports = {
   root: true,
   parser: 'vue-eslint-parser',
@@ -27,6 +29,16 @@ module.exports = {
     node: true,
     es6: true,
     browser: true,
+  },
+  settings: {
+    'import/extensions': ['.js', '.ts', '.vue'],
+    'import/resolver': {
+      typescript: {},
+      alias: {
+        map: [['@', path.join(__dirname, 'src/')]],
+        extensions: ['.js', '.ts', '.vue'],
+      },
+    },
   },
   rules: {
     // basic

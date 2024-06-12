@@ -1,4 +1,4 @@
-import { app, ipcMain, webContents } from 'electron';
+import { app, webContents } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -6,7 +6,7 @@ import log from 'electron-log';
 
 import { exists } from '../utils';
 
-import type { SyncPluginTransfer } from '../../shared/plugins/pinia-sync.plugin';
+import type { SyncPluginTransfer } from '@/shared/plugins';
 import type { WebContents } from 'electron';
 import type { StateTree } from 'pinia';
 
@@ -42,7 +42,7 @@ export function createPiniaTransferMain(options?: PiniaTransferMainOptions): Pin
   const interval = options?.saveInterval ?? 60 * 1000;
 
   const dirtyStores = new Set<string>();
-  const plugin: PiniaTransferMain = {
+  const transfer: PiniaTransferMain = {
     // Read the state from transfer
     read: async (id: string) => {
       const data = await readLocalFile();
@@ -51,9 +51,6 @@ export function createPiniaTransferMain(options?: PiniaTransferMainOptions): Pin
     },
     // Write updated state to transfer
     write: (id: string, state?: StateTree) => {
-      // Record the store which has been updated
-      dirtyStores.add(id);
-
       webContents.getAllWebContents().forEach((contents: WebContents) => {
         if (!contents.isDestroyed()) {
           // Send the state to the renderer process
@@ -74,7 +71,7 @@ export function createPiniaTransferMain(options?: PiniaTransferMainOptions): Pin
       for await (const id of dirtyStores) {
         data[id] = {
           ...data[id],
-          ...(await plugin.getState?.(id)),
+          ...(await transfer.getState?.(id)),
         };
       }
 
@@ -89,21 +86,26 @@ export function createPiniaTransferMain(options?: PiniaTransferMainOptions): Pin
       }
     },
   };
+  const proxy = new Proxy(transfer, {
+    get(target, prop, receiver) {
+      const origin = Reflect.get(target, prop, receiver);
 
-  setInterval(plugin.flush, interval);
+      if (prop === 'wirte' || prop === 'getState') {
+        return function method(id: string, ...args: any[]) {
+          // Record the store which has been updated
+          dirtyStores.add(id);
 
-  // Handle updates from the renderer process
-  ipcMain.on('pinia:update', (_, { id, state }: {
-    id: string;
-    state: any;
-  }) => {
-    // Record the store which has been updated
-    dirtyStores.add(id);
+          return origin?.call(target, id, ...args);
+        };
+      }
 
-    plugin.onUpdate?.(id, state);
+      return origin;
+    },
   });
+  const timer = setInterval(transfer.flush, interval);
 
-  ipcMain.handle('pinia:read', async (_, id: string) => plugin.getState?.(id));
+  // Clear timer before quit
+  app.on('will-quit', () => clearInterval(timer));
 
-  return plugin;
+  return proxy;
 }

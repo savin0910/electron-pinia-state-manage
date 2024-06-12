@@ -1,4 +1,4 @@
-import type { SyncPluginTransfer } from '../../shared/plugins/pinia-sync.plugin';
+import type { SyncPluginTransfer } from '@/shared/plugins';
 import type { StateTree } from 'pinia';
 
 export const transfer: SyncPluginTransfer = {
@@ -13,8 +13,3 @@ export const transfer: SyncPluginTransfer = {
     window.electron.send('pinia:update', { id, state });
   },
 };
-
-// Handle updates from the main process
-window.electron.on('pinia:update', ({ id, state }) => {
-  transfer.onUpdate?.(id, state);
-});

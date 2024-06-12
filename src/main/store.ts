@@ -1,3 +1,5 @@
+import { ipcMain } from 'electron';
+
 import { createPinia } from 'pinia';
 import { createApp, h } from 'vue';
 
@@ -16,8 +18,18 @@ export function createStore() {
 
   app.use(store);
 
-  // Use all store to trigger the sync plugin
+  // Init all store
   useUserStore(store);
+
+  // Handle updates from the renderer process
+  ipcMain.on('pinia:update', (_, { id, state }: {
+    id: string;
+    state: any;
+  }) => {
+    transfer.onUpdate?.(id, state);
+  });
+
+  ipcMain.handle('pinia:read', async (_, id: string) => transfer.getState?.(id));
 
   return {
     store,
