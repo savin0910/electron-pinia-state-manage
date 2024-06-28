@@ -1,7 +1,7 @@
-import { app, ipcMain, webContents } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import { app, ipcMain, webContents } from 'electron';
 import log from 'electron-log';
 
 import { exists } from '../utils';
@@ -101,7 +101,7 @@ app.on('will-quit', () => clearInterval(timer));
 // Handle updates from the renderer process
 ipcMain.on('pinia:update', ({ sender }, { id, state }: {
   id: string;
-  state: any;
+  state: StateTree;
 }) => {
   // Record the store which has been updated
   dirtyStores.add(id);

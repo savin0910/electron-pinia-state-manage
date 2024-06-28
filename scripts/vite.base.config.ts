@@ -3,6 +3,9 @@ import path from 'node:path';
 
 import pkg from '../package.json';
 
+import type { AddressInfo } from 'node:net';
+import type { ConfigEnv, Plugin, UserConfig } from 'vite';
+
 export const builtins = [
   'electron',
   ...builtinModules.map((m) => [m, `node:${m}`]).flat(),
@@ -14,8 +17,7 @@ export const alias = {
   '@': path.join(__dirname, '../src'),
 };
 
-/** @type {(env: import('vite').ConfigEnv<'build'>) => import('vite').UserConfig} */
-export const getBuildConfig = (env) => {
+export function getBuildConfig(env: ConfigEnv<'build'>): UserConfig {
   const { root, mode, command } = env;
 
   return {
@@ -31,31 +33,27 @@ export const getBuildConfig = (env) => {
     },
     clearScreen: false,
   };
-};
+}
 
-/** @type {(names: string[]) => { [name: string]: VitePluginRuntimeKeys } }} */
-export const getDefineKeys = (names) => {
-  /** @type {{ [name: string]: VitePluginRuntimeKeys }} */
-  const define = {};
+export function getDefineKeys(names: string[]) {
+  const define: { [name: string]: VitePluginRuntimeKeys } = {};
 
   return names.reduce((acc, name) => {
     const NAME = name.toUpperCase();
-    /** @type {VitePluginRuntimeKeys} */
-    const keys = {
+    const keys: VitePluginRuntimeKeys = {
       VITE_DEV_SERVER_URL: `${NAME}_VITE_DEV_SERVER_URL`,
       VITE_NAME: `${NAME}_VITE_NAME`,
     };
 
     return { ...acc, [name]: keys };
   }, define);
-};
+}
 
-/** @type {(env: import('vite').ConfigEnv<'build'>) => Record<string, any>} */
-export const getBuildDefine = (env) => {
+export function getBuildDefine(env: ConfigEnv<'build'>) {
   const { command, forgeConfig } = env;
   const names = forgeConfig.renderer
     .filter(({ name }) => name != null)
-    .map(({ name }) => name);
+    .map(({ name }) => name!);
   const defineKeys = getDefineKeys(names);
   const define = Object.entries(defineKeys).reduce((acc, [name, keys]) => {
     const { VITE_DEV_SERVER_URL, VITE_NAME } = keys;
@@ -70,10 +68,9 @@ export const getBuildDefine = (env) => {
   }, {});
 
   return define;
-};
+}
 
-/** @type {(name: string) => import('vite').Plugin} */
-export const pluginExposeRenderer = (name) => {
+export function pluginExposeRenderer(name: string): Plugin {
   const { VITE_DEV_SERVER_URL } = getDefineKeys([name])[name];
 
   return {
@@ -84,8 +81,7 @@ export const pluginExposeRenderer = (name) => {
       process.viteDevServers[name] = server;
 
       server.httpServer?.once('listening', () => {
-        /** @type {import('node:net').AddressInfo} */
-        const addressInfo = server.httpServer?.address();
+        const addressInfo = server.httpServer!.address() as AddressInfo;
         // Expose env constant for main process use.
         process.env[
           VITE_DEV_SERVER_URL
@@ -93,21 +89,22 @@ export const pluginExposeRenderer = (name) => {
       });
     },
   };
-};
+}
 
-/** @type {(command: 'reload' | 'restart') => import('vite').Plugin} */
-export const pluginHotRestart = (command) => ({
-  name: '@electron-forge/plugin-vite:hot-restart',
-  closeBundle() {
-    if (command === 'reload') {
-      for (const server of Object.values(process.viteDevServers)) {
-        // Preload scripts hot reload.
-        server.ws.send({ type: 'full-reload' });
+export function pluginHotRestart(command: 'reload' | 'restart'): Plugin {
+  return ({
+    name: '@electron-forge/plugin-vite:hot-restart',
+    closeBundle() {
+      if (command === 'reload') {
+        for (const server of Object.values(process.viteDevServers)) {
+          // Preload scripts hot reload.
+          server.ws.send({ type: 'full-reload' });
+        }
+      } else {
+        // Main process hot restart.
+        // https://github.com/electron/forge/blob/v7.2.0/packages/api/core/src/api/start.ts#L216-L223
+        process.stdin.emit('data', 'rs');
       }
-    } else {
-      // Main process hot restart.
-      // https://github.com/electron/forge/blob/v7.2.0/packages/api/core/src/api/start.ts#L216-L223
-      process.stdin.emit('data', 'rs');
-    }
-  },
-});
+    },
+  });
+}

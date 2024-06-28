@@ -4,7 +4,8 @@
     {
       "name": "Debug",
       "configurations": ["Main", "Renderer"],
-      "stopAll": true
+      "stopAll": true,
+      "preLaunchTask": "Dev Server"
     }
   ],
   "configurations": [

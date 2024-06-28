@@ -15,11 +15,15 @@ export function createStore() {
 
   app.use(store);
 
-  // Init all store
-  useUserStore(store);
+  const stores = Object.fromEntries([
+    useUserStore(store),
+  ].map((item) => [item.$id, item]));
 
   return {
     store,
+    stores,
     transfer,
   };
 }
+
+export type Stores = ReturnType<typeof createStore>['stores'];

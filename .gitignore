@@ -89,7 +89,11 @@ web_modules/
 out
 
 # Nuxt.js build / generate output
+.output
+.data
 .nuxt
+.nitro
+.cache
 dist
 
 # Gatsby files

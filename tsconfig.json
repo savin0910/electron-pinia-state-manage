@@ -1,31 +1,32 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "composite": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "ignoreDeprecations": "5.0",
-    "importsNotUsedAsValues": "error",
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "preserveWatchOutput": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "module": "ESNext",
     "paths": {
-      "@/*": ["src/*"]
-    },
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": false,
-    "strict": true,
-    "target": "ESNext",
-    "useDefineForClassFields": true
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["@types", "src/**/*.ts", "src/**/*.vue"],
-  "exclude": ["scripts", "node_modules"]
+  "include": [
+    "./.nuxt/nuxt.d.ts",
+    "./.config/nuxt.*",
+    "./@types",
+    "./node_modules/@pinia/nuxt/runtime",
+    "./node_modules/@nuxt/devtools/runtime",
+    "./node_modules/@nuxt/telemetry/runtime",
+    "./scripts",
+    "./src",
+    "./eslint.config.mjs",
+    "./forge.config.ts",
+    "./nuxt.config.ts",
+    "./tailwind.config.ts"
+  ],
+  "exclude": [
+    "./node_modules",
+    "./node_modules/nuxt/node_modules",
+    "./node_modules/@pinia/nuxt/runtime/server",
+    "./node_modules/@nuxt/devtools/runtime/server",
+    "./node_modules/@nuxt/telemetry/runtime/server",
+    "./dist",
+    "./.output"
+  ]
 }
