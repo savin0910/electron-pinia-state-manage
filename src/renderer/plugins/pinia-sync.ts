@@ -1,7 +1,11 @@
+import log from 'electron-log/renderer';
+
 import { createSyncPlugin } from '@/shared/plugins';
 
 import type { PiniaTransfer } from '@/shared/plugins';
 import type { Pinia, StateTree } from 'pinia';
+
+const storageKeyPrefix = 'pinia:';
 
 export const transfer: PiniaTransfer = {
   read: async (id?: string) => {
@@ -38,6 +42,9 @@ export const transfer: PiniaTransfer = {
   write: (id: string, state: any) => {
     // Send state to the main process
     window.electron.send('pinia:update', { id, state });
+
+    // Save state to sessionStorage, so other webContent could read it
+    sessionStorage.setItem(storageKeyPrefix + id, JSON.stringify(state));
   },
 };
 
@@ -45,6 +52,23 @@ if (typeof window !== 'undefined') {
   // Handle updates from the main process
   window.electron.on('pinia:update', ({ id, state }) => {
     transfer.onUpdate?.(id, state);
+  });
+
+  // Handle updates from other webContents
+  window.addEventListener('storage', ({ storageArea, key, newValue }) => {
+    if (storageArea !== window.sessionStorage || !key?.startsWith(storageKeyPrefix) || newValue === null) {
+      // Only use sessionStorage for state transfer
+      return;
+    }
+
+    try {
+      const id = key.slice(storageKeyPrefix.length);
+      const state = JSON.parse(newValue);
+
+      transfer.onUpdate?.(id, state);
+    } catch {
+      log.scope('pinia').error('Failed to parse session state:', newValue);
+    }
   });
 }
 
