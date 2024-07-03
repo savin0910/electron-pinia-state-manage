@@ -1,3 +1,4 @@
+import log from 'electron-log';
 import { createPinia } from 'pinia';
 import { createApp, h } from 'vue';
 
@@ -22,8 +23,15 @@ export function createStore() {
   return {
     store,
     stores,
-    transfer,
   };
+}
+
+export async function saveStoreToLocal() {
+  log.scope('app').info('Saving state before quitting...');
+
+  await transfer.flush();
+
+  log.scope('app').info('State saved, quitting...');
 }
 
 export type Stores = ReturnType<typeof createStore>['stores'];

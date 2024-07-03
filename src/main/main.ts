@@ -1,13 +1,12 @@
 import path from 'node:path';
 
 import { app, BrowserWindow } from 'electron';
-import log from 'electron-log';
 import squirrelStartup from 'electron-squirrel-startup';
 
-import { createStore } from './store';
+import { startNuxtServer, stopNuxtServer } from './server';
+import { createStore, saveStoreToLocal } from './store';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-
 if (squirrelStartup) {
   app.quit();
 }
@@ -17,11 +16,16 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 }
 
-const { stores, transfer } = createStore();
+const { stores } = createStore();
 
 Object.assign(global, { stores });
 
-const createWindow = () => {
+async function createWindow() {
+  if (app.isPackaged) {
+    // Start the Nuxt server
+    await startNuxtServer();
+  }
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
@@ -37,7 +41,7 @@ const createWindow = () => {
 
   // and load the index.html of the app.
   mainWindow.loadURL('http://localhost:3000');
-};
+}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -65,22 +69,8 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
-let beforeQuit = false;
+app.on('will-quit', async () => {
+  stopNuxtServer();
 
-app.on('will-quit', async (event) => {
-  if (beforeQuit) {
-    return;
-  }
-
-  event.preventDefault();
-
-  log.scope('app').info('Saving state before quitting...');
-
-  // Flush the state to disk before quitting
-  await transfer.flush();
-
-  log.scope('app').info('State saved, quitting...');
-
-  beforeQuit = true;
-  app.quit();
+  await saveStoreToLocal();
 });
