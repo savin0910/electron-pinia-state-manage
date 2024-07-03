@@ -1,11 +1,11 @@
 {
-  "name": "electron-pinia-state-manage",
+  "name": "minimal-kit",
   "version": "0.2.0",
-  "description": "Sharing state between multiple processes in electron use pinia.",
+  "description": "Minimal Kit",
   "main": ".vite/build/main.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/savin0910/electron-pinia-state-manage.git"
+    "url": "git+https://github.com/savin0910/minimal-kit.git"
   },
   "keywords": [
     "electron",
@@ -14,9 +14,9 @@
   "author": "Savin Chen <han7586917@outlook.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/savin0910/electron-pinia-state-manage/issues"
+    "url": "https://github.com/savin0910/minimal-kit/issues"
   },
-  "homepage": "https://github.com/savin0910/electron-pinia-state-manage#readme",
+  "homepage": "https://github.com/savin0910/minimal-kit#readme",
   "scripts": {
     "postinstall": "nuxt prepare",
     "dev": "nuxt dev",
