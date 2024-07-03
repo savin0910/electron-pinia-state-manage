@@ -55,6 +55,11 @@ export function getBuildDefine(env: ConfigEnv<'build'>) {
     .filter(({ name }) => name != null)
     .map(({ name }) => name!);
   const defineKeys = getDefineKeys(names);
+  const defaultDefine = {
+    __VUE_OPTIONS_API__: 'true',
+    __VUE_PROD_DEVTOOLS__: 'false',
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false',
+  };
   const define = Object.entries(defineKeys).reduce((acc, [name, keys]) => {
     const { VITE_DEV_SERVER_URL, VITE_NAME } = keys;
     const def = {
@@ -65,7 +70,7 @@ export function getBuildDefine(env: ConfigEnv<'build'>) {
       [VITE_NAME]: JSON.stringify(name),
     };
     return { ...acc, ...def };
-  }, {});
+  }, defaultDefine);
 
   return define;
 }
