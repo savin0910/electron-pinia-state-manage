@@ -1,14 +1,9 @@
-import { defineStore } from 'pinia';
-import { ref, type Ref } from 'vue';
+import { persistentMap } from '@nanostores/persistent';
 
-export type UserStoreState = {
-  name: Ref<string>;
-};
-
-export const useUserStore = defineStore<'user', UserStoreState>('user', () => {
-  const name = ref('');
-
-  return {
-    name,
-  };
+const $user = persistentMap('user', {
+  name: '123',
 });
+
+export const userStore = {
+  $user,
+};

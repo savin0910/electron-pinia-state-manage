@@ -3,20 +3,24 @@
     <label>
       Enter Your Name:
       <input
-        v-model="userStore.name"
+        v-model="username"
         class="border"
         type="text"
       >
     </label>
 
     <h1 class="font-bold text-lg">
-      Hello {{ userStore.name }}
+      Hello {{ username }}
     </h1>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useUserStore } from '@/shared/store';
+import '../store';
 
-const userStore = useUserStore();
+import { useVModel } from '@nanostores/vue';
+
+import { userStore } from '@/shared/store';
+
+const username = useVModel(userStore.$user, 'name');
 </script>

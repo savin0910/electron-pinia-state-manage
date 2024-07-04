@@ -140,5 +140,8 @@ dist
 # Vite
 .vite/
 
-# Electron-Forge
+# Electron-Forge package output
 out/
+
+# Astro generated types
+.astro/

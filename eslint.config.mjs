@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { fixupConfigRules, fixupPluginRules } from '@eslint/compat';
 import { FlatCompat } from '@eslint/eslintrc';
 import eslint from '@eslint/js';
+import astroPlugin from 'eslint-plugin-astro';
 import importPlugin from 'eslint-plugin-import';
 import pluginVue from 'eslint-plugin-vue';
 import tseslint from 'typescript-eslint';
@@ -23,8 +24,10 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   ...fixupConfigRules(compat.extends('airbnb-base')),
   ...pluginVue.configs['flat/recommended'],
+  ...astroPlugin.configs.recommended,
   {
     // Parser settings
+    files: ['**/*.ts', '**/*.vue'],
     ignores: ['.nuxt/', '.vite/', 'node_modules/', 'out/', 'dist/'],
     languageOptions: {
       parser: vueParser,
@@ -86,10 +89,10 @@ export default tseslint.config(
           map: [
             ['@', './src'],
           ],
-          extensions: ['.js', '.ts', '.vue'],
+          extensions: ['.js', '.ts', '.vue', '.astro'],
         },
         node: {
-          extensions: ['.js', '.ts', '.vue'],
+          extensions: ['.js', '.ts', '.vue', '.astro'],
         },
         typescript: {
           alwaysTryTypes: true,
@@ -100,7 +103,16 @@ export default tseslint.config(
       import: fixupPluginRules(importPlugin),
     },
     rules: {
-      'import/extensions': [2, 'ignorePackages', { js: 'always', ts: 'never' }],
+      'import/extensions': [
+        2,
+        'ignorePackages',
+        {
+          js: 'always',
+          ts: 'never',
+          vue: 'always',
+          astro: 'always',
+        },
+      ],
       'import/no-extraneous-dependencies': 0,
       'import/no-unresolved': 0,
       'import/order': [

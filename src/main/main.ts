@@ -4,8 +4,9 @@ import { app, BrowserWindow } from 'electron';
 import log from 'electron-log';
 import squirrelStartup from 'electron-squirrel-startup';
 
-import { startNuxtServer, stopNuxtServer } from './server';
-import { createStore, saveStoreToLocal } from './store';
+import { userStore } from '@/shared/store';
+
+import { saveStoreToLocal } from './store';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (squirrelStartup) {
@@ -21,9 +22,9 @@ log.initialize({
   preload: true,
 });
 
-const { stores } = createStore();
-
-Object.assign(global, { stores });
+userStore.$user.listen((user) => {
+  console.log(`user name's: ${user.name}`);
+});
 
 function createWindow() {
   // Create the browser window.
@@ -40,16 +41,12 @@ function createWindow() {
   win.menuBarVisible = false;
 
   // and load the index.html of the app.
-  win.loadURL('http://localhost:3000');
+  win.loadURL('http://localhost:4321');
+
+  win.webContents.openDevTools();
 }
 
 async function createMainWindow() {
-  if (app.isPackaged) {
-    // Start the Nuxt server
-    await startNuxtServer();
-  }
-
-  createWindow();
   createWindow();
 }
 
@@ -80,7 +77,5 @@ app.on('window-all-closed', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 app.on('will-quit', async () => {
-  stopNuxtServer();
-
-  await saveStoreToLocal();
+  saveStoreToLocal();
 });

@@ -22,8 +22,8 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "^.*Nuxt (\\d\\.?)+ with Nitro (\\d\\.?)+$",
-          "endsPattern": "^.*Nuxt Nitro server built in \\d+ ms.*$"
+          "beginsPattern": "^.*astro dev$",
+          "endsPattern": "^.*watching for file changes.*$"
         }
       }
     }

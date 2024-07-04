@@ -1,37 +1,59 @@
-import log from 'electron-log';
-import { createPinia } from 'pinia';
-import { createApp, h } from 'vue';
+import fs from 'node:fs';
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
 
-import { createSyncPlugin } from '../shared/plugins';
-import { useUserStore } from '../shared/store';
+import { setPersistentEngine } from '@nanostores/persistent';
+import { app, ipcMain, webContents } from 'electron';
 
-import { transfer } from './plugins';
+import { createPersistentEngine } from '@/shared/utils';
 
-export function createStore() {
-  const app = createApp(h('div'));
-  const store = createPinia();
+import type { PersistentPayload, PersistentListener } from '@/shared/utils';
 
-  const syncPlugin = createSyncPlugin(transfer);
-  store.use(syncPlugin);
+const localFile = path.join(app.getPath('userData'), 'store.json');
+const saveInterval = 2 * 60 * 1000;
 
-  app.use(store);
+let localStore: Record<string, any>;
+let listener: PersistentListener;
+let updated = false;
 
-  const stores = Object.fromEntries([
-    useUserStore(store),
-  ].map((item) => [item.$id, item]));
+export const saveStoreToLocal = async () => {
+  if (updated && localStore) {
+    await writeFile(localFile, JSON.stringify(localStore, null, 2), 'utf-8');
 
-  return {
-    store,
-    stores,
-  };
-}
+    updated = false;
+  }
+};
+const { store, events } = createPersistentEngine({
+  get: (name: string) => {
+    if (!localStore && fs.existsSync(localFile)) {
+      localStore = JSON.parse(fs.readFileSync(localFile, 'utf-8'));
+    }
 
-export async function saveStoreToLocal() {
-  log.scope('app').info('Saving state before quitting...');
+    return localStore?.[name];
+  },
+  send: (payload: PersistentPayload) => {
+    updated = true;
 
-  await transfer.flush();
+    webContents.getAllWebContents().forEach((webContent) => {
+      if (!webContent.isDestroyed()) {
+        webContent.send('store:update', payload);
+      }
+    });
+  },
+  subscribe: (onUpdate: PersistentListener) => {
+    listener = onUpdate;
+  },
+});
 
-  log.scope('app').info('State saved, quitting...');
-}
+// Save store to local file every 2 minutes
+setInterval(saveStoreToLocal, saveInterval);
 
-export type Stores = ReturnType<typeof createStore>['stores'];
+setPersistentEngine(store, events);
+
+ipcMain.on('store:update', (_, payload: PersistentPayload) => {
+  listener?.(payload);
+});
+
+ipcMain.on('store:read', (event, { key }) => {
+  event.returnValue = store[key];
+});

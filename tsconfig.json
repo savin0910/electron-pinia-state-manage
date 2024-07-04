@@ -1,23 +1,19 @@
 {
-  "extends": "./.nuxt/tsconfig.json",
+  "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
-    "module": "ESNext",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"]
     }
   },
   "include": [
-    "./.nuxt/nuxt.d.ts",
-    "./.config/nuxt.*",
+    "**/*.astro",
     "./@types",
-    "./node_modules/@pinia/nuxt/runtime",
-    "./node_modules/@nuxt/devtools/runtime",
-    "./node_modules/@nuxt/telemetry/runtime",
     "./scripts",
     "./src",
+    "./astro.config.ts",
     "./eslint.config.mjs",
     "./forge.config.ts",
-    "./nuxt.config.ts",
     "./tailwind.config.ts"
   ],
   "exclude": [

@@ -1,8 +1,7 @@
-/** @type {import('tailwindcss').Config} */
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  content: ['src/**/.ts', 'src/**/*.vue'],
+  content: ['src/**/*.{astro,html,js,jsx,md,mdx,ts,tsx,vue}'],
   theme: {
     extend: {},
   },
