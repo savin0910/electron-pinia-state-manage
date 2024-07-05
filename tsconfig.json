@@ -16,13 +16,5 @@
     "./forge.config.ts",
     "./tailwind.config.ts"
   ],
-  "exclude": [
-    "./node_modules",
-    "./node_modules/nuxt/node_modules",
-    "./node_modules/@pinia/nuxt/runtime/server",
-    "./node_modules/@nuxt/devtools/runtime/server",
-    "./node_modules/@nuxt/telemetry/runtime/server",
-    "./dist",
-    "./.output"
-  ]
+  "exclude": ["./.astro", "./.vite", "./dist", "./node_modules"]
 }

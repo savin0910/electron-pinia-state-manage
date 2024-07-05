@@ -28,7 +28,7 @@ export default tseslint.config(
   {
     // Parser settings
     files: ['**/*.ts', '**/*.vue'],
-    ignores: ['.nuxt/', '.vite/', 'node_modules/', 'out/', 'dist/'],
+    ignores: ['.vite/', 'node_modules/', 'out/', 'dist/'],
     languageOptions: {
       parser: vueParser,
       parserOptions: {

@@ -41,12 +41,8 @@ const { store, events } = createPersistentEngine({
       return JSON.parse(localValue);
     }
 
-    if ('electron' in window) {
-      // Get state value from main process
-      return window.electron.sendSync('store:read', { key });
-    }
-
-    return undefined;
+    // Get state value from main process
+    return window.electron?.sendSync('store:read', { key });
   },
   send: (payload: PersistentPayload) => {
     const localKey = `${localPrefix}${payload.key}`;
@@ -57,10 +53,8 @@ const { store, events } = createPersistentEngine({
 
     localStorage.setItem(localKey, JSON.stringify(payload.newValue));
 
-    if ('electron' in window) {
-      // Send state update to main process
-      window.electron.send('store:update', payload);
-    }
+    // Send state update to main process
+    window.electron?.send('store:update', payload);
   },
   subscribe: (onUpdate: PersistentListener) => {
     listener = onUpdate;
@@ -82,9 +76,7 @@ if (typeof window !== 'undefined') {
     });
   });
 
-  if ('electron' in window) {
-    window.electron.on('store:update', update);
-  }
+  window.electron?.on('store:update', update);
 }
 
 setPersistentEngine(store, events);

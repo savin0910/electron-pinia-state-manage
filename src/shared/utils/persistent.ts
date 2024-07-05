@@ -80,11 +80,11 @@ export function createPersistentEngine({
     Reflect.set(store, `${remotePrefix}${key}`, newValue);
   };
   const events: PersistentEvents = {
-    addEventListener(key: string, callback: PersistentListener, restore) {
+    addEventListener(_, callback: PersistentListener, restore) {
       restore();
       listeners.add(callback);
     },
-    removeEventListener(key: string, callback: PersistentListener) {
+    removeEventListener(_, callback: PersistentListener) {
       listeners.delete(callback);
     },
     perKey: false,
