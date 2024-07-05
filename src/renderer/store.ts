@@ -8,10 +8,28 @@ const localPrefix = '__local__:';
 
 let listener: PersistentListener;
 const update = (payload: PersistentPayload) => listener?.(payload);
+const initState: Record<string, any> = {};
+
+if (typeof window !== 'undefined') {
+  // Load initial state from localStorage
+  Object.entries(localStorage).forEach(([key, value]) => {
+    if (key.startsWith(localPrefix)) {
+      initState[key.slice(localPrefix.length)] = JSON.parse(value);
+    }
+  });
+}
 
 const { store, events } = createPersistentEngine({
+  initState,
   get: (key: string) => {
-    const localKey = `${localPrefix}${key}`;
+    let localKey: string;
+
+    if (key.startsWith(localPrefix)) {
+      localKey = key;
+      key = key.slice(localPrefix.length);
+    } else {
+      localKey = `${localPrefix}${key}`;
+    }
 
     if (typeof window === 'undefined') {
       return undefined;

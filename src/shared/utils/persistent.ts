@@ -7,12 +7,14 @@ export type PersistentPayload = PersistentEvent & {
 export type PersistentListener = (payload: PersistentPayload) => void;
 
 export type PersistentEngineOptions = {
+  initState?: Record<string, any>;
   get?: (name: string) => any;
   send?: PersistentListener;
   subscribe?: (onUpdate: PersistentListener) => void;
 };
 
 export function createPersistentEngine({
+  initState,
   get,
   send = () => {},
   subscribe,
@@ -20,7 +22,7 @@ export function createPersistentEngine({
   const remotePrefix = '__remote__:';
   const listeners: Set<PersistentListener> = new Set();
   const onChange = (payload: PersistentPayload) => listeners.forEach((fn) => fn(payload));
-  const store: PersistentStore = new Proxy({}, {
+  const store: PersistentStore = new Proxy({ ...initState }, {
     set(target: any, key: string, newValue: any) {
       if (key.startsWith(remotePrefix)) {
         // Remote update's key starts with prefix

@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { setPersistentEngine } from '@nanostores/persistent';
 import { app, ipcMain, webContents } from 'electron';
+import log from 'electron-log';
 
 import { createPersistentEngine } from '@/shared/utils';
 
@@ -12,25 +13,23 @@ import type { PersistentPayload, PersistentListener } from '@/shared/utils';
 const localFile = path.join(app.getPath('userData'), 'store.json');
 const saveInterval = 2 * 60 * 1000;
 
-let localStore: Record<string, any>;
+let localStore: Record<string, any> = {};
 let listener: PersistentListener;
 let updated = false;
 
-export const saveStoreToLocal = async () => {
-  if (updated && localStore) {
-    await writeFile(localFile, JSON.stringify(localStore, null, 2), 'utf-8');
-
-    updated = false;
-  }
-};
-const { store, events } = createPersistentEngine({
-  get: (name: string) => {
-    if (!localStore && fs.existsSync(localFile)) {
-      localStore = JSON.parse(fs.readFileSync(localFile, 'utf-8'));
+fs.readFile(localFile, 'utf-8', (error, data) => {
+  if (!error) {
+    try {
+      localStore = JSON.parse(data);
+    } catch {
+      log.scope('store').warn('Failed to parse store.json');
     }
+  }
+});
 
-    return localStore?.[name];
-  },
+const { store, events } = createPersistentEngine({
+  initState: localStore,
+  get: (name: string) => localStore[name],
   send: (payload: PersistentPayload) => {
     updated = true;
 
@@ -44,6 +43,13 @@ const { store, events } = createPersistentEngine({
     listener = onUpdate;
   },
 });
+export const saveStoreToLocal = async () => {
+  if (updated) {
+    await writeFile(localFile, JSON.stringify(store, null, 2), 'utf-8');
+
+    updated = false;
+  }
+};
 
 // Save store to local file every 2 minutes
 setInterval(saveStoreToLocal, saveInterval);
@@ -51,6 +57,8 @@ setInterval(saveStoreToLocal, saveInterval);
 setPersistentEngine(store, events);
 
 ipcMain.on('store:update', (_, payload: PersistentPayload) => {
+  updated = true;
+
   listener?.(payload);
 });
 

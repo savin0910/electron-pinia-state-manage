@@ -29,8 +29,8 @@ userStore.$user.listen((user) => {
 function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 900,
     webPreferences: {
       preload: path.join(__dirname, 'main.preload.js'),
     },
@@ -43,7 +43,9 @@ function createWindow() {
   // and load the index.html of the app.
   win.loadURL('http://localhost:4321');
 
-  win.webContents.openDevTools();
+  if (process.env.NODE_ENV === 'development') {
+    win.webContents.openDevTools();
+  }
 }
 
 async function createMainWindow() {

@@ -1,7 +1,7 @@
 import { persistentMap } from '@nanostores/persistent';
 
 const $user = persistentMap('user', {
-  name: '123',
+  name: '',
 });
 
 export const userStore = {

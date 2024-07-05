@@ -16,8 +16,6 @@
 </template>
 
 <script setup lang="ts">
-import '../store';
-
 import { useVModel } from '@nanostores/vue';
 
 import { userStore } from '@/shared/store';
