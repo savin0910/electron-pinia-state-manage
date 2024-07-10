@@ -1,8 +1,13 @@
 ---
 import Hello from '../components/hello.vue';
+import ModalTrigger from '../components/modal-trigger.vue';
 import Layout from '../layouts/layout.astro';
 ---
 
 <Layout title="Welcome to Astro.">
   <Hello client:load />
+
+  <ModalTrigger client:load>
+    Show Modal
+  </ModalTrigger>
 </Layout>

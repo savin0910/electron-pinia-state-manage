@@ -6,7 +6,9 @@ import squirrelStartup from 'electron-squirrel-startup';
 
 import { userStore } from '@/shared/store';
 
+import { handleAppProtocol } from './net';
 import { saveStoreToLocal } from './store';
+import { loadURL } from './windows';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (squirrelStartup) {
@@ -41,7 +43,7 @@ function createWindow() {
   win.menuBarVisible = false;
 
   // and load the index.html of the app.
-  win.loadURL('http://localhost:4321');
+  loadURL(win, '/');
 
   if (process.env.NODE_ENV === 'development') {
     win.webContents.openDevTools();
@@ -56,6 +58,8 @@ async function createMainWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
+  handleAppProtocol();
+
   createMainWindow();
 
   // On OS X it's common to re-create a window in the app when the

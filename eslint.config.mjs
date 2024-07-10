@@ -63,6 +63,7 @@ export default tseslint.config(
     files: ['**/*.ts', '**/*.vue'],
     rules: {
       'no-console': 0,
+      'no-dupe-class-members': 0,
       'no-param-reassign': 0,
       'no-restricted-syntax': 0,
       'no-undef': 0,

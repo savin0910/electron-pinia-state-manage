@@ -1,0 +1,62 @@
+---
+import Layout from '../layouts/layout.astro';
+---
+
+<Layout title="Modal">
+  <div class="flex flex-col h-screen">
+    <header class="flex justify-between">
+      <h3
+        id="modal-title"
+        class="font-bold text-lg"
+      ></h3>
+
+      <button
+        id="modal-close"
+        class="w-5 h-5 no-drag"
+        type="button"
+      >
+        x
+      </button>
+    </header>
+
+    <div
+      id="modal-message"
+      class="flex-1"
+    ></div>
+
+    <div
+      id="modal-buttons"
+      class="flex justify-center"
+    ></div>
+  </div>
+</Layout>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const setTextContent = (element: Element | null, textContent: string | null) => {
+  if (element && textContent) {
+    element.textContent = decodeURIComponent(textContent);
+  }
+};
+
+setTextContent(document.querySelector('#modal-title'), params.get('title'));
+setTextContent(document.querySelector('#modal-message'), params.get('message'));
+
+const btnContent = document.querySelector('#modal-buttons')!;
+params.get('buttons')?.split(',').forEach((text: string, index: number) => {
+  const button = document.createElement('button');
+  const classes = ['px-3', 'border', 'border-gray-300', 'rounded', 'hover:bg-gray-100', 'no-drag'];
+
+  button.textContent = text;
+  button.type = 'button';
+  button.classList.add(...classes);
+  button.addEventListener('click', () => {
+    window.electron.send('modal:click', index);
+  });
+  btnContent.appendChild(button);
+});
+
+document.querySelector('#modal-close')!.addEventListener('click', () => {
+  window.electron.send('modal:close');
+});
+</script>

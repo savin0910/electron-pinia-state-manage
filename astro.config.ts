@@ -3,7 +3,15 @@ import vue from '@astrojs/vue';
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  integrations: [tailwind(), vue()],
+  build: {
+    assetsPrefix: 'app://www',
+  },
+  integrations: [
+    tailwind({
+      applyBaseStyles: false,
+    }),
+    vue(),
+  ],
   srcDir: './src/renderer',
   vite: {
     server: {
